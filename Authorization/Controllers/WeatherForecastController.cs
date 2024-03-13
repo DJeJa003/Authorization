@@ -14,10 +14,12 @@ namespace Authentication.Controllers
         };
 
         private readonly ILogger<WeatherForecastController> _logger;
-
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        private readonly IConfiguration _configuration;
+        
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IConfiguration configuration)
         {
             _logger = logger;
+            _configuration = configuration;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
@@ -30,6 +32,21 @@ namespace Authentication.Controllers
                 Summary = Summaries[Random.Shared.Next(Summaries.Length)]
             })
             .ToArray();
+        }
+
+        [HttpGet("AppSettingsTest")]
+        public IActionResult GetSimple()
+        {
+            var simppeli = _configuration["SimpleValue"];
+            var monimutkainen = _configuration["AppSettings:ApiKey"];
+
+            var result = new
+            {
+                SimpleValue = simppeli,
+                ApiKey = monimutkainen
+            };
+
+            return Ok(result);
         }
 
         [Authorize]
@@ -62,13 +79,13 @@ namespace Authentication.Controllers
         {
             if (credentials.Username == "testuser" && credentials.Password == "testpassword")
             {
-                var tokenService = new TokenService();
+                var tokenService = new TokenService(_configuration);
                 var token = tokenService.GenerateToken(credentials.Username, false);
                 return Ok(new { Token = token });
             }
             else if (credentials.Username == "admin" && credentials.Password == "adminpassword")
             {
-                var tokenService = new TokenService();
+                var tokenService = new TokenService(_configuration);
                 var token = tokenService.GenerateToken(credentials.Username, true);
                 return Ok(new { Token = token });
             }
